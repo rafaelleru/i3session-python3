@@ -1,13 +1,15 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import os
-import i3
+import i3ipc
 import sys
 import pickle
 import subprocess
 import logging
 from time import sleep
-from xdg.BaseDirectory import *
+from xdg import *
+
+i3 = i3ipc.Connection()
 
 class Node:
     def __init__(self, data, parent = None):
@@ -96,20 +98,20 @@ class Tree():
 
     # set up workspaces, exec clients
     @classmethod
-    def restore(self, nodes, parent = None, only_workspace = None):
+    def restore(self, nodes, parent=None, only_workspace=None):
         for n in nodes:
             if 'num' in n:
-                node = Workspace(n, parent) 
+                node = Workspace(n, parent)
             elif 'process' in n:
-                node = Client(n, parent) 
+                node = Client(n, parent)
             else:
-                node = Container(n, parent) 
+                node = Container(n, parent)
 
             logging.debug(node)
             node.restore()
             
             # Recurse subtree
-            if node.has_children() == True:
+            if node.has_children() is True:
                 if only_workspace and isinstance(node, Workspace) and str(node.data['num']) != only_workspace:
                     break
                 else:
@@ -152,7 +154,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if sys.argv[1] == 'save':
-        print "Saving..."
+        print("Saving...")
         session = i3.get_tree()
 
         # traverse tree and assign node processes before storing
@@ -160,16 +162,16 @@ if __name__ == '__main__':
             session['nodes'] = Tree.assign_processes(session['nodes']) 
 
         pickle.dump(session, open(config_file, "wb"))
-        print "Session saved to " + config_file
+        print("Session saved to " + config_file)
     elif sys.argv[1] == 'restore':
         nag_bar = nag_bar_process()
-        print "Restoring..."
+        print("Restoring...")
 
         # load session from file
         try:
             session = pickle.load(open(config_file, "rb"))
         except Exception:
-            print "Can't restore saved session..."
+            print("Can't restore saved session...")
             sys.exit(1)
 
         # traverse tree and send commands to i3 based on what was saved
@@ -180,7 +182,7 @@ if __name__ == '__main__':
                 Tree.restore(session['nodes']) 
 
         nag_bar.terminate()
-        print "Session restored from " + config_file
+        print("Session restored from " + config_file)
     else:
         show_help()
         sys.exit(1)
