@@ -9,30 +9,30 @@ import logging
 from time import sleep
 import xdg
 
-def create_session(descendents):
+def create_session(workspaces):
     nodes = []
 
-    for n in descendents:
+    for w in workspaces:
         dict = {}
-        dict['name'] = n.name
-        if n.window_class is not None:
-            dict['window_class'] = n.window_class.lower()
-        else:
-            dict['window_class'] = None
-        if n.num is not None:
-            dict['workspace'] = n.num
+        dict['workspace'] = w.num
+        childs = []
+        for window in w.leaves():
+            app = {}
+            app['name'] = window.name
+            app['id'] = window.id
+            app['command'] = window.window_class.lower()
+            childs.append(app)
+        dict['clients'] = childs
 
         nodes.append(dict)
 
     return nodes
 
-def restore(nodes, i3):
-    for n in nodes:
-        if n['window_class'] is not None:
-            i3.command('exec %s' % n['window_class'])
-        else:
-            pass
-            
+def restore(workspaces, i3):
+    for w in workspaces:
+        i3.command('workspace %s' % w['workspace'])
+        for window in w['clients']:
+            i3.command('exec %s' % window['command'])
 
 
 # use i3-nagbar to show a message while restoring
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     if sys.argv[1] == 'save':
         print("Saving...")
         session = i3.get_tree()
-        nodes = create_session(session.descendents())
+        nodes = create_session(session.workspaces())
 
         pickle.dump(nodes, open(config_file, "wb"))
         print("Session saved to " + config_file)
