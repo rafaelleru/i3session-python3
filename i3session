@@ -16,11 +16,18 @@ def create_session(workspaces):
         dict = {}
         dict['workspace'] = w.num
         childs = []
-        for window in w.leaves():
+        for window in w.descendents():
             app = {}
-            app['name'] = window.name
-            app['id'] = window.id
-            app['command'] = window.window_class.lower()
+            if window.name is not None:
+                app['name'] = window.name
+                app['id'] = window.id
+                app['command'] = window.window_class.lower()
+                app['childs'] = None
+            else:
+                app['name'] = None
+                app['layout'] = window.layout
+                app['childs'] = get_childs(window)
+                pass
             childs.append(app)
         dict['clients'] = childs
 
@@ -28,12 +35,39 @@ def create_session(workspaces):
 
     return nodes
 
+
+def get_childs(container):
+    for client in container.descendents():
+        app = {}
+        if client.name is not None:
+            app['name'] = client.name
+            app['id'] = client.id
+            app['command'] = client.window_class.lower()
+            app['childs'] = None
+        else:
+            app['name'] = None
+            app['layout'] = client.layout
+            app['childs'] = get_childs(client)
+    return app
+
 def restore(workspaces, i3):
     for w in workspaces:
         i3.command('workspace %s' % w['workspace'])
         for window in w['clients']:
-            i3.command('exec %s' % window['command'])
+            if window['name'] is not None:
+                i3.command('exec %s' % window['command'])
+            else:
+                i3.command('split %s' % window['layout'])
+                create_childs(window['childs'])
+                
 
+def create_childs(childs):
+    for client in childs:
+        if client['name'] is not None:
+            i3.command('exec %s' % client['command'])
+        else:
+            i3.command('split %s' % client['layout'])
+            create_childs(client['childs'])
 
 # use i3-nagbar to show a message while restoring
 def nag_bar_process():
