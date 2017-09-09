@@ -57,7 +57,7 @@ def restore(workspaces, i3):
             if window['name'] is not None:
                 i3.command('exec %s' % window['command'])
             else:
-                i3.command('split %s' % window['layout'])
+                i3.command('split %s' % window['layout'][-1])
                 create_childs(window['childs'])
                 
 
@@ -66,7 +66,7 @@ def create_childs(childs):
         if client['name'] is not None:
             i3.command('exec %s' % client['command'])
         else:
-            i3.command('split %s' % client['layout'])
+            i3.command('split %s' % client['layout'][-1])
             create_childs(client['childs'])
 
 # use i3-nagbar to show a message while restoring
