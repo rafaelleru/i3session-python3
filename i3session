@@ -68,7 +68,6 @@ def restore(workspaces, i3):
                 
 
 def create_childs(childs):
-    print(childsg)
     for client in childs:
         if client['name'] is not None:
             logging.debug('exec %s', client['command'])
