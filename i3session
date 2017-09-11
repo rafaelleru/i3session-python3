@@ -16,7 +16,7 @@ def create_session(workspaces):
         dict = {}
         dict['workspace'] = w.num
         childs = []
-        for window in w.leaves():
+        for window in w.nodes:
             app = {}
             if window.name is not None:
                 app['name'] = window.name
@@ -39,7 +39,8 @@ def create_session(workspaces):
 
 
 def get_childs(container):
-    for client in container.descendents():
+    childs = []
+    for client in container.nodes:
         app = {}
         if client.name is not None:
             app['name'] = client.name
@@ -50,7 +51,8 @@ def get_childs(container):
             app['name'] = None
             app['layout'] = client.layout
             app['childs'] = get_childs(client)
-    return app
+        childs.append(app)
+    return childs
 
 def restore(workspaces, i3):
     for w in workspaces:
@@ -66,6 +68,7 @@ def restore(workspaces, i3):
                 
 
 def create_childs(childs):
+    print(childsg)
     for client in childs:
         if client['name'] is not None:
             logging.debug('exec %s', client['command'])
@@ -95,7 +98,7 @@ if __name__ == '__main__':
         config_dir = os.path.join(xdg_config_home, 'i3')
 
     config_file = os.path.join(config_dir, 'session')
-    logging.basicConfig(filename='i3session.log',level=logging.DEBUG)
+    logging.basicConfig(filename='i3session.log', level=logging.DEBUG)
 
     if len(sys.argv) < 2:
         show_help()
@@ -126,7 +129,7 @@ if __name__ == '__main__':
         #     else:
         #         Tree.restore(session['nodes']) 
 
-        print(session)
+        # print(session)
         restore(session, i3)
         nag_bar.terminate()
         print("Session restored from " + config_file)
