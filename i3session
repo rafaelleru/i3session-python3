@@ -16,14 +16,16 @@ def create_session(workspaces):
         dict = {}
         dict['workspace'] = w.num
         childs = []
-        for window in w.descendents():
+        for window in w.leaves():
             app = {}
             if window.name is not None:
                 app['name'] = window.name
                 app['id'] = window.id
                 app['command'] = window.window_class.lower()
                 app['childs'] = None
+                logging.debug('Store window: %s', window.name)
             else:
+                logging.debug('Childs layout: %s', window.layout[-1])
                 app['name'] = None
                 app['layout'] = window.layout
                 app['childs'] = get_childs(window)
@@ -93,6 +95,7 @@ if __name__ == '__main__':
         config_dir = os.path.join(xdg_config_home, 'i3')
 
     config_file = os.path.join(config_dir, 'session')
+    logging.basicConfig(filename='i3session.log',level=logging.DEBUG)
 
     if len(sys.argv) < 2:
         show_help()
