@@ -14,7 +14,7 @@ def save(workspaces, session_file):
     # Array of layouts json
     layouts = []
 
-    for w in workspaces():
+    for w in workspaces:
         saved_workspace = {}
         saved_workspace['num'] = w.num
         output = subprocess.check_output(['i3-save-tree',
@@ -22,15 +22,15 @@ def save(workspaces, session_file):
         saved_workspace['json'] = output
         layouts.append(saved_workspace)
 
-    pickle.dump(layouts, open(session_file, 'w'))
+    pickle.dump(layouts, open(session_file, 'wb'))
 
 
-def restore(i3session, layouts):
+def restore(i3, layouts):
     for workspace in layouts:
         f = open('/tmp/w.json', 'w')
-        f.write(workspace['json'])
-        i3session.command('workspace %s' %workspace['num'])
-        i3session.command('append-layout /tmp/w.json')
+        f.write(str(workspace['json']))
+        i3.command('workspace %s' % workspace['num'])
+        i3.command('append-layout /tmp/w.json')
         f.close()
 
 # use i3-nagbar to show a message while restoring
@@ -62,9 +62,8 @@ if __name__ == '__main__':
     if sys.argv[1] == 'save':
         print("Saving...")
         session = i3.get_tree()
-        nodes = save(session.workspaces())
+        nodes = save(session.workspaces(), config_file)
 
-        pickle.dump(nodes, open(config_file, "wb"))
         print("Session saved to " + config_file)
     elif sys.argv[1] == 'restore':
         nag_bar = nag_bar_process()
@@ -77,6 +76,7 @@ if __name__ == '__main__':
             print("Can't restore saved session...")
             sys.exit(1)
 
+        print(session)
         restore(i3, session)
         nag_bar.terminate()
         print("Session restored from " + config_file)
